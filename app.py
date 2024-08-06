@@ -259,9 +259,12 @@ col3.selectbox(
     options=list(RELATIVE_DATE_RANGES.keys()),
     key="date_range",
 )
+group_by_options = list(GROUP_KEY_MAP.keys())
+if st.session_state.billable_metric == "Semantic Layer Metrics Request":
+    group_by_options.remove("Job")
 col4.selectbox(
     label="Group By",
-    options=list(GROUP_KEY_MAP.keys()),
+    options=group_by_options,
     key="group_by",
 )
 group_key_value = st.session_state.group_by.lower() + "_id"
