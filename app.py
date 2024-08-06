@@ -34,7 +34,7 @@ init_app = st.sidebar.button(label="Initialize App", key="init_app")
 
 BILLING_URL = f"https://{st.session_state.dbt_cloud_host}/api/private/accounts/{st.session_state.dbt_cloud_account_id}/billing/usage/"
 ADMIN_API_URL = f"https://{st.session_state.dbt_cloud_host}/api/v2/accounts/{st.session_state.dbt_cloud_account_id}"
-BILLABLE_METRICS = ["successful_models_built", "semantic_layer_metrics_request"]
+BILLABLE_METRICS = ["Successful Models Built", "Semantic Layer Metrics Request"]
 WINDOW_SIZES = ["month", "day", "hour"]
 GROUP_KEY_MAP = {
     "Project": "project_id",
@@ -59,18 +59,18 @@ def admin_api_request(path: str, **params):
     url = f"{ADMIN_API_URL}/{path}"
     headers = {"Authorization": f"Bearer {st.session_state.dbt_cloud_service_token}"}
     r = requests.get(url, headers=headers, params=params)
-    return r.json()["data"]
+    return r.json()
 
 
 if init_app:
     # Get all projects
-    projects = admin_api_request("projects")
+    projects = admin_api_request("projects")["data"]
     st.session_state.projects_list = [
         {"project_id": p["id"], "project_name": p["name"]} for p in projects
     ]
 
     # Get all environments
-    environments = admin_api_request("environments")
+    environments = admin_api_request("environments")["data"]
     st.session_state.environments_list = [
         {
             "environment_id": e["id"],
@@ -82,17 +82,22 @@ if init_app:
 
     # Get all jobs
     st.session_state.jobs_list = []
-    for project in st.session_state.projects_list:
-        jobs = admin_api_request("jobs", project_id=project["project_id"])
+    offset = 0
+    limit = 100
+    while True:
+        jobs = admin_api_request("jobs", offset=offset, limit=limit)
         job_list_for_project = [
             {
                 "job_id": j["id"],
                 "job_name": j["name"],
                 "environment_id": j["environment_id"],
             }
-            for j in jobs
+            for j in jobs["data"]
         ]
         st.session_state.jobs_list.extend(job_list_for_project)
+        offset += limit
+        if offset > jobs["extra"]["pagination"]["total_count"]:
+            break
 
     df_projects = pd.DataFrame(st.session_state.projects_list)
     df_environments = pd.DataFrame(st.session_state.environments_list)
@@ -172,7 +177,7 @@ def create_billing_chart(df: pd.DataFrame):
         x="date",
         y="value",
         color="group_value",
-        title="Billing Data",
+        title=st.session_state.billable_metric,
         labels={"date": "Date", "value": "Value", "group_value": "Group"},
     )
 
@@ -236,7 +241,7 @@ if get_data:
     start_date = datetime.now() - timedelta(days=start_delta)
     end_date = datetime.now() - timedelta(days=end_delta)
     billing_df = get_billing_data(
-        st.session_state.billable_metric,
+        st.session_state.billable_metric.replace(" ", "_").lower(),
         start_date,
         end_date,
         st.session_state.window_size,
