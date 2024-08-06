@@ -227,14 +227,14 @@ if "user_df" not in st.session_state:
     st.warning("Please initialize the app to get started.")
     st.stop()
 
-col1, col2, col3, col4, col5 = st.columns(5)
+col1, col2, col3, col4 = st.columns([0.4, 0.2, 0.2, 0.2])
 col1.selectbox(
     label="Billable Metric",
     options=BILLABLE_METRICS,
     key="billable_metric",
 )
 col2.selectbox(
-    label="Window Size",
+    label="Grain",
     options=WINDOW_SIZES,
     key="window_size",
 )
@@ -250,12 +250,13 @@ col4.selectbox(
 )
 group_key_value = st.session_state.group_by.lower() + "_id"
 group_key_name = st.session_state.group_by.lower() + "_name"
-group_values = sorted(list(st.session_state.user_df[group_key_name].unique()))
-col5.multiselect(
-    label="Select Group Values",
-    options=group_values,
-    key="group_values",
-)
+group_values = []
+# group_values = sorted(list(st.session_state.user_df[group_key_name].unique()))
+# col5.multiselect(
+#     label="Select Group Values",
+#     options=group_values,
+#     key="group_values",
+# )
 
 get_data = st.button(label="Get Data", key="get_data")
 
