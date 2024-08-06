@@ -117,7 +117,7 @@ if init_app:
     ]
 
 
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def get_billing_data(
     billable_metric: str,
     start_date: datetime.date,
