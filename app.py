@@ -160,6 +160,26 @@ def get_billing_data(
     # Convert group_value to int before replacing with name
     billing_df["group_value"] = billing_df["group_value"].astype(int)
 
+    # Add in additional columns depending on grain of request
+    if group_key_name == "environment_name":
+        billing_df["project_name"] = billing_df["group_value"].map(
+            st.session_state.user_df.drop_duplicates("environment_id").set_index(
+                "environment_id"
+            )["project_name"]
+        )
+
+    if group_key_name == "job_name":
+        billing_df["environment_name"] = billing_df["group_value"].map(
+            st.session_state.user_df.drop_duplicates("job_id").set_index("job_id")[
+                "environment_name"
+            ]
+        )
+        billing_df["project_name"] = billing_df["group_value"].map(
+            st.session_state.user_df.drop_duplicates("job_id").set_index("job_id")[
+                "project_name"
+            ]
+        )
+
     # Replace group_value with names
     billing_df["group_value"] = billing_df["group_value"].map(id_to_name_mapping)
 
@@ -167,6 +187,7 @@ def get_billing_data(
     if window != "hour":
         billing_df["date"] = pd.to_datetime(billing_df["date"]).dt.date
 
+    # Rename group_value to group_key_name
     billing_df.rename(columns={"group_value": group_key_name}, inplace=True)
 
     return billing_df
@@ -193,7 +214,7 @@ This app allows you to view usage metrics for your dbt Cloud account, specifical
 the number of successful models built and the number of semantic layer metrics requests.
 
 Additionally, you can:
-- Filter the data by project, environment, or job
+- Group the data by project, environment, or job
 - Retrieve data at different time intervals (day, month, hour)
 - Download the data as a CSV file
 
