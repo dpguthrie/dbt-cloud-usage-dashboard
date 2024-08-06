@@ -195,11 +195,27 @@ def get_billing_data(
 
 def create_billing_chart(df: pd.DataFrame):
     # Create a Plotly bar chart
+    group_by = st.session_state.group_by.lower()
+    if group_by == "project":
+        color_name = "project_name"
+    elif group_by == "environment":
+        color_name = "Env Name (Project)"
+        df[color_name] = df["environment_name"] + " (" + df["project_name"] + ")"
+    else:
+        color_name = "Job Name (Project | Environment)"
+        df[color_name] = (
+            df["job_name"]
+            + " ("
+            + df["project_name"]
+            + " | "
+            + df["environment_name"]
+            + ")"
+        )
     fig = px.bar(
         df,
         x="date",
         y="value",
-        color=st.session_state.group_by.lower() + "_name",
+        color=color_name,
         title=st.session_state.billable_metric,
         labels={"date": "Date", "value": "Value", "group_value": "Group"},
     )
@@ -209,21 +225,21 @@ def create_billing_chart(df: pd.DataFrame):
 
 
 st.title("Usage Metrics")
-st.markdown("""
-This app allows you to view usage metrics for your dbt Cloud account, specifically
-the number of successful models built and the number of semantic layer metrics requests.
-
-Additionally, you can:
-- Group the data by project, environment, or job
-- Retrieve data at different time intervals (day, month, hour)
-- Download the data as a CSV file
-
-To get started, please enter your dbt Cloud account ID, service token, and (optionally) 
-the dbt Cloud host where your account is located (default is cloud.getdbt.com) in the
-sidebar and click 'Initialize App'.
-""")
 
 if "user_df" not in st.session_state:
+    st.markdown("""
+    This app allows you to view usage metrics for your dbt Cloud account, specifically
+    the number of successful models built and the number of semantic layer metrics requests.
+
+    Additionally, you can:
+    - Group the data by project, environment, or job
+    - Retrieve data at different time intervals (day, month, hour)
+    - Download the data as a CSV file
+
+    To get started, please enter your dbt Cloud account ID, service token, and (optionally) 
+    the dbt Cloud host where your account is located (default is cloud.getdbt.com) in the
+    sidebar and click 'Initialize App'.
+    """)
     st.warning("Please initialize the app to get started.")
     st.stop()
 
@@ -276,9 +292,9 @@ if get_data:
         st.warning("No data available for the selected filters")
         st.stop()
     tab1, tab2 = st.tabs(["Chart", "Data"])
-    with tab1:
-        create_billing_chart(billing_df)
     with tab2:
         st.dataframe(
             billing_df.drop(columns=["plan_id", "group_key"]), use_container_width=True
         )
+    with tab1:
+        create_billing_chart(billing_df)
