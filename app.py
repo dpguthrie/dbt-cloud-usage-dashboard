@@ -167,6 +167,8 @@ def get_billing_data(
     if window != "hour":
         billing_df["date"] = pd.to_datetime(billing_df["date"]).dt.date
 
+    billing_df.rename(columns={"group_value": group_key_name}, inplace=True)
+
     return billing_df
 
 
@@ -176,7 +178,7 @@ def create_billing_chart(df: pd.DataFrame):
         df,
         x="date",
         y="value",
-        color="group_value",
+        color=st.session_state.group_by.lower() + "_name",
         title=st.session_state.billable_metric,
         labels={"date": "Date", "value": "Value", "group_value": "Group"},
     )
@@ -254,6 +256,8 @@ if get_data:
         st.stop()
     tab1, tab2 = st.tabs(["Chart", "Data"])
     with tab1:
-        create_billing_chart(billing_df.drop(columns=["plan_id"]))
+        create_billing_chart(billing_df)
     with tab2:
-        st.dataframe(billing_df, use_container_width=True)
+        st.dataframe(
+            billing_df.drop(columns=["plan_id", "group_key"]), use_container_width=True
+        )
