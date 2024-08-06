@@ -250,7 +250,6 @@ col4.selectbox(
 )
 group_key_value = st.session_state.group_by.lower() + "_id"
 group_key_name = st.session_state.group_by.lower() + "_name"
-group_values = []
 # group_values = sorted(list(st.session_state.user_df[group_key_name].unique()))
 # col5.multiselect(
 #     label="Select Group Values",
@@ -271,7 +270,7 @@ if get_data:
         st.session_state.window_size,
         group_key_value,
         group_key_name,
-        group_values=st.session_state.group_values,
+        # group_values=st.session_state.group_values,
     )
     if billing_df.empty:
         st.warning("No data available for the selected filters")
