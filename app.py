@@ -36,11 +36,7 @@ BILLING_URL = f"https://{st.session_state.dbt_cloud_host}/api/private/accounts/{
 ADMIN_API_URL = f"https://{st.session_state.dbt_cloud_host}/api/v2/accounts/{st.session_state.dbt_cloud_account_id}"
 BILLABLE_METRICS = ["Successful Models Built", "Semantic Layer Metrics Request"]
 WINDOW_SIZES = ["month", "day", "hour"]
-GROUP_KEY_MAP = {
-    "Project": "project_id",
-    "Environment": "environment_id",
-    "Job": "job_id",
-}
+GROUPS = ["Project", "Environment", "Job"]
 START_DATE = datetime.now() - timedelta(days=30)
 END_DATE = datetime.now()
 RELATIVE_DATE_RANGES = {
@@ -54,23 +50,51 @@ RELATIVE_DATE_RANGES = {
 
 
 # Project, Environment, and Job information
-@st.cache_data
-def admin_api_request(path: str, **params):
-    url = f"{ADMIN_API_URL}/{path}"
+def admin_api_request(path: str):
+    def is_success(json_response: dict) -> tuple[bool, str]:
+        return json_response["status"]["is_success"], json_response["status"][
+            "developer_message"
+        ]
+
+    response_list = []
     headers = {"Authorization": f"Bearer {st.session_state.dbt_cloud_service_token}"}
-    r = requests.get(url, headers=headers, params=params)
-    return r.json()
+    url = f"{ADMIN_API_URL}/{path}"
+    limit = 100
+    params = {"offset": 0, "limit": limit}
+    while True:
+        json_response = requests.get(url, headers=headers, params=params).json()
+        success, error = is_success(json_response)
+        if not success:
+            st.error(f"Application encountered an error making a request: {error}")
+            st.stop()
+
+        if isinstance(json_response["data"], dict):
+            return json_response["data"]
+
+        response_list.extend(json_response["data"])
+        params["offset"] += limit
+        if (
+            "extra" not in json_response
+            or params["offset"] > json_response["extra"]["pagination"]["total_count"]
+        ):
+            break
+
+    return response_list
 
 
-if init_app:
+def initialize_app():
+    # Get plan information
+    plan_data = admin_api_request("/billing/plans")
+    st.session_state.plan_data = plan_data
+
     # Get all projects
-    projects = admin_api_request("projects")["data"]
+    projects = admin_api_request("projects")
     st.session_state.projects_list = [
         {"project_id": p["id"], "project_name": p["name"]} for p in projects
     ]
 
     # Get all environments
-    environments = admin_api_request("environments")["data"]
+    environments = admin_api_request("environments")
     st.session_state.environments_list = [
         {
             "environment_id": e["id"],
@@ -81,24 +105,17 @@ if init_app:
     ]
 
     # Get all jobs
-    st.session_state.jobs_list = []
-    offset = 0
-    limit = 100
-    while True:
-        jobs = admin_api_request("jobs", offset=offset, limit=limit)
-        job_list_for_project = [
-            {
-                "job_id": j["id"],
-                "job_name": j["name"],
-                "environment_id": j["environment_id"],
-            }
-            for j in jobs["data"]
-        ]
-        st.session_state.jobs_list.extend(job_list_for_project)
-        offset += limit
-        if offset > jobs["extra"]["pagination"]["total_count"]:
-            break
+    jobs = admin_api_request("jobs")
+    st.session_state.jobs_list = [
+        {
+            "job_id": j["id"],
+            "job_name": j["name"],
+            "environment_id": j["environment_id"],
+        }
+        for j in jobs
+    ]
 
+    # Merge all information together
     df_projects = pd.DataFrame(st.session_state.projects_list)
     df_environments = pd.DataFrame(st.session_state.environments_list)
     df_jobs = pd.DataFrame(st.session_state.jobs_list)
@@ -117,7 +134,17 @@ if init_app:
     ]
 
 
-@st.cache_data(show_spinner=False)
+def get_plan_information():
+    current_credits = st.session_state.plan_data["current_credits"]
+    available = current_credits.get("available_cents", 0) / 100
+    total = current_credits.get("total_cents", 0) / 100
+    remaining = total - available
+    plan_id = st.session_state.plan_data["subscription"]["plan_id"]
+    if plan_id == "enterprise" and total > 0:
+        progress_text = f"\${remaining:,.2f} used of \${total:,.0f} commit"
+        st.progress(remaining / total, text=progress_text)
+
+
 def get_billing_data(
     billable_metric: str,
     start_date: datetime.date,
@@ -226,6 +253,17 @@ def create_billing_chart(df: pd.DataFrame):
 
 st.title("Usage Metrics")
 
+if init_app:
+    if st.session_state.dbt_cloud_account_id == "":
+        st.error("Please enter your dbt Cloud account ID")
+        st.stop()
+
+    if st.session_state.dbt_cloud_service_token == "":
+        st.error("Please enter your dbt Cloud service token")
+        st.stop()
+
+    initialize_app()
+
 if "user_df" not in st.session_state:
     st.markdown("""
     This app allows you to view usage metrics for your dbt Cloud account, specifically
@@ -243,6 +281,8 @@ if "user_df" not in st.session_state:
     st.warning("Please initialize the app to get started.")
     st.stop()
 
+get_plan_information()
+
 col1, col2, col3, col4 = st.columns([0.4, 0.2, 0.2, 0.2])
 col1.selectbox(
     label="Billable Metric",
@@ -259,7 +299,7 @@ col3.selectbox(
     options=list(RELATIVE_DATE_RANGES.keys()),
     key="date_range",
 )
-group_by_options = list(GROUP_KEY_MAP.keys())
+group_by_options = GROUPS.copy()
 if st.session_state.billable_metric == "Semantic Layer Metrics Request":
     group_by_options.remove("Job")
 col4.selectbox(
@@ -294,6 +334,7 @@ if get_data:
     if billing_df.empty:
         st.warning("No data available for the selected filters")
         st.stop()
+
     tab1, tab2 = st.tabs(["Chart", "Data"])
     with tab2:
         st.dataframe(
