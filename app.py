@@ -136,13 +136,16 @@ def initialize_app():
 
 def get_plan_information():
     current_credits = st.session_state.plan_data["current_credits"]
-    available = current_credits.get("available_cents", 0) / 100
-    total = current_credits.get("total_cents", 0) / 100
-    remaining = total - available
-    plan_id = st.session_state.plan_data["subscription"]["plan_id"]
-    if plan_id == "enterprise" and total > 0:
-        progress_text = f"\${remaining:,.2f} used of \${total:,.0f} commit"
-        st.progress(remaining / total, text=progress_text)
+    if current_credits:
+        available = current_credits.get("available_cents", 0) / 100
+        total = current_credits.get("total_cents", 0) / 100
+        remaining = total - available
+    subscription = st.session_state.plan_data["subscription"]
+    if subscription:
+        plan_id = subscription["plan_id"]
+        if plan_id == "enterprise" and total > 0:
+            progress_text = f"\${remaining:,.2f} used of \${total:,.0f} commit"
+            st.progress(remaining / total, text=progress_text)
 
 
 def get_billing_data(
