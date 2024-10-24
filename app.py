@@ -63,14 +63,6 @@ WINDOW_SIZES = ["hour", "day", "month"]
 GROUPS = ["Project", "Environment", "Job", "Model"]
 START_DATE = datetime.now() - timedelta(days=30)
 END_DATE = datetime.now()
-RELATIVE_DATE_RANGES = {
-    "Last 7 days": (7, 0),
-    "Last 30 days": (30, 0),
-    "Last 60 days": (90, 0),
-    "Last 90 days": (90, 0),
-    "Last 180 days": (180, 0),
-    "Last year": (365, 0),
-}
 
 
 # Get URL for Discovery API
