@@ -132,7 +132,7 @@ def discovery_api_request():
                 .get("performance", {})
                 .get("mostExecutedModels", [])
             )
-        except (AttributeError, KeyError) as e:
+        except (AttributeError, KeyError):
             st.warning(f"Error accessing models.  See response:\n {response.json()}")
             continue
 
