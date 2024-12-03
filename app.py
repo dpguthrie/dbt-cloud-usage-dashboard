@@ -183,9 +183,19 @@ def admin_api_request(path: str):
     limit = 100
     params = {"offset": 0, "limit": limit}
     while True:
-        json_response = requests.get(
+        response = requests.get(
             url, headers=st.session_state.headers, params=params
-        ).json()
+        )
+        try:
+            json_response = response.json()
+        except ConnectionError as e:
+            st.error(f"An error occurred.  Most likely host is misconfigured. Error: {e}")
+        except ValueError as e:
+            st.error(
+                "An error occurred retrieving account information."
+                f"Response: {response.text}\nError: {e}"
+            )
+            st.stop()
         success = is_success(json_response)
         if not success:
             st.error(
@@ -209,13 +219,7 @@ def admin_api_request(path: str):
 
 def initialize_app():
     # Get plan information
-    try:
-        plan_data = admin_api_request("billing/plans")
-    except ConnectionError as e:
-        st.error(
-            f"An error occurred.  Most likely your host is misconfigured.  Error: {e}"
-        )
-        st.stop()
+    plan_data = admin_api_request("billing/plans")
     st.session_state.plan_data = plan_data
 
     # Get all projects
