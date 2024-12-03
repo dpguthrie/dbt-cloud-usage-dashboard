@@ -530,9 +530,10 @@ if get_data and st.session_state.group_by != "Model":
 
     tab1, tab2 = st.tabs(["Chart", "Data"])
     with tab2:
-        st.dataframe(
-            billing_df.drop(columns=["plan_id", "group_key"]), use_container_width=True
-        )
+        for col in ["plan_id", "group_key"]:
+            if col in billing_df.columns:
+                billing_df.drop(columns=[col], inplace=True)
+        st.dataframe(billing_df, use_container_width=True)
     with tab1:
         create_billing_chart(billing_df)
 elif get_data and st.session_state.group_by == "Model":
