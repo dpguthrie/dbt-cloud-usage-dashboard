@@ -446,7 +446,7 @@ if "user_df" not in st.session_state:
     sidebar and click 'Initialize App'.
     
     **It's important to note that the service token you use needs to either have
-    Account Admin or Billing Admin permissions; otherwise this WILL NOT work!.  
+    Account Admin or Account Viewer permissions; otherwise this WILL NOT work!.  
     Additionally, if you want to retrieve model level data, you'll need to also have
     at least the _Metadata Only_ permission to allow for querying the Discovery API.**
     
