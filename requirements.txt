@@ -22,6 +22,8 @@ gitpython==3.1.43
     # via streamlit
 idna==3.7
     # via requests
+iniconfig==2.0.0
+    # via pytest
 jinja2==3.1.4
     # via
     #   altair
@@ -40,13 +42,13 @@ numpy==2.0.1
     # via
     #   altair
     #   pandas
-    #   pyarrow
     #   pydeck
     #   streamlit
 packaging==24.1
     # via
     #   altair
     #   plotly
+    #   pytest
     #   streamlit
 pandas==2.2.2
     # via
@@ -57,14 +59,18 @@ pillow==10.4.0
     # via streamlit
 plotly==5.23.0
     # via -r requirements.in
+pluggy==1.5.0
+    # via pytest
 protobuf==5.27.3
     # via streamlit
-pyarrow==17.0.0
+pyarrow==19.0.0
     # via streamlit
 pydeck==0.9.1
     # via streamlit
 pygments==2.18.0
     # via rich
+pytest==8.3.4
+    # via -r requirements.in
 python-dateutil==2.9.0.post0
     # via pandas
 pytz==2024.1
