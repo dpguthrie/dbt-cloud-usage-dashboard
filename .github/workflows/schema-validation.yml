@@ -1,8 +1,5 @@
 name: API Schema Validation
 
-permissions:
-  pull-requests: 'write'
-
 on:
   schedule:
     - cron: '0 0 * * *'  # Run daily at midnight UTC
@@ -47,3 +44,7 @@ jobs:
             body: 'The daily API schema validation test has detected changes in the API response schema. Please check the workflow logs for details.',
             labels: ['api-change', 'bug']
           })
+
+permissions:
+  pull-requests: 'write'
+  issues: 'write'
