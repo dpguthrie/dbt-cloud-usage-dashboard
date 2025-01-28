@@ -44,7 +44,3 @@ jobs:
             body: 'The daily API schema validation test has detected changes in the API response schema. Please check the workflow logs for details.',
             labels: ['api-change', 'bug']
           })
-
-permissions:
-  pull-requests: 'write'
-  issues: 'write'
