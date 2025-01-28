@@ -1,0 +1,25 @@
+[project]
+name = "dbt-cloud-usage-dashboard"
+version = "0.1.0"
+description = "Dashboard for viewing dbt Cloud usage metrics"
+requires-python = ">=3.10"
+dependencies = [
+    "pandas>=2.2.2",
+    "plotly>=5.23.0",
+    "streamlit~=1.37.0",
+    "requests>=2.32.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.4",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"] 
