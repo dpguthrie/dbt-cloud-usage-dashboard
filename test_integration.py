@@ -37,7 +37,9 @@ def test_billing_api_schema_stability(api_credentials):
        - group_key is 'project_id' when grouped by project
     """
     # Initialize app and run it first
-    at = AppTest.from_file("app.py").run()
+    at = AppTest.from_file("app.py")
+
+    at.run()
 
     # Set credentials
     at.sidebar.text_input(key="dbt_cloud_account_id").set_value(
