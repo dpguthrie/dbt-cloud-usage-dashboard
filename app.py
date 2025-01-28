@@ -183,13 +183,13 @@ def admin_api_request(path: str):
     limit = 100
     params = {"offset": 0, "limit": limit}
     while True:
-        response = requests.get(
-            url, headers=st.session_state.headers, params=params
-        )
+        response = requests.get(url, headers=st.session_state.headers, params=params)
         try:
             json_response = response.json()
         except ConnectionError as e:
-            st.error(f"An error occurred.  Most likely host is misconfigured. Error: {e}")
+            st.error(
+                f"An error occurred.  Most likely host is misconfigured. Error: {e}"
+            )
         except ValueError as e:
             st.error(
                 "An error occurred retrieving account information."
@@ -286,7 +286,7 @@ def get_plan_information():
     if subscription:
         plan_id = subscription["plan_id"]
         if plan_id == "enterprise" and total > 0:
-            progress_text = f"\${remaining:,.2f} used of \${total:,.0f} commit"
+            progress_text = f"${remaining:,.2f} used of ${total:,.0f} commit"
             st.progress(remaining / total, text=progress_text)
 
 
@@ -315,12 +315,18 @@ def get_billing_data(
             df[df[group_key_name].isin(group_values)][group_key_value].unique()
         )
 
-    json_response = requests.get(
+    response = requests.get(
         BILLING_URL, params=params, headers=st.session_state.headers
-    ).json()
+    )
+    json_response = response.json()
+
+    # Store raw response in session state for testing
+    st.session_state.last_api_response = json_response
+
     if not json_response["status"]["is_success"]:
         error = json_response["status"]["developer_message"]
         st.error(f"Error making request: {error}")
+        return pd.DataFrame()
 
     billing_df = pd.DataFrame(json_response["data"])
     if billing_df.empty:
