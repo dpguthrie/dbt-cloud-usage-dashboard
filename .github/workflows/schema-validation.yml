@@ -1,5 +1,8 @@
 name: API Schema Validation
 
+permissions:
+  pull-requests: 'write'
+
 on:
   schedule:
     - cron: '0 0 * * *'  # Run daily at midnight UTC
