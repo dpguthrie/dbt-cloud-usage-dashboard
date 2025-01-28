@@ -1,0 +1,45 @@
+name: API Schema Validation
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Run daily at midnight UTC
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  validate-schema:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version-file: ".python-version"
+        
+    - name: Install dependencies
+      run: uv pip install -r requirements.txt
+        
+    - name: Run schema validation tests
+      env:
+        DBT_CLOUD_ACCOUNT_ID: ${{ secrets.DBT_CLOUD_ACCOUNT_ID }}
+        DBT_CLOUD_SERVICE_TOKEN: ${{ secrets.DBT_CLOUD_SERVICE_TOKEN }}
+        DBT_CLOUD_HOST: ${{ secrets.DBT_CLOUD_HOST }}
+      run: |
+        uv run pytest test_integration.py -v
+        
+    - name: Create Issue on Failure
+      if: failure()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '🚨 API Schema Change Detected',
+            body: 'The daily API schema validation test has detected changes in the API response schema. Please check the workflow logs for details.',
+            labels: ['api-change', 'bug']
+          })
