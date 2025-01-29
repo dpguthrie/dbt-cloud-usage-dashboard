@@ -17,34 +17,9 @@ The dashboard allows users to:
 
 ## Requirements
 
-- Python 3.10 or higher
-- dbt Cloud account with appropriate permissions:
+- A service token with the following permissions:
   - Account Admin or Account Viewer permissions for usage metrics
   - Metadata Only permissions (minimum) for model-level data via Discovery API
-
-## Installation
-
-1. Clone the repository
-2. Install dependencies using `uv`:
-    ```bash
-    uv sync --all-extras
-    ```
-
-## Configuration
-
-The application requires the following environment variables for API authentication:
-
-- `DBT_CLOUD_ACCOUNT_ID`: Your dbt Cloud account ID
-- `DBT_CLOUD_SERVICE_TOKEN`: Service token with appropriate permissions
-- `DBT_CLOUD_HOST` (optional): Your dbt Cloud host (defaults to cloud.getdbt.com)
-
-## Usage
-
-Run the Streamlit application:
-
-```bash
-streamlit run app.py
-```
 
 ## API Schema Validation
 
@@ -58,9 +33,35 @@ The validation tests check for:
 - Required fields (date, datetime, value, group_key, group_value)
 - Correct data types for each field
 - Proper date formatting with timezone information
-- Expected group_key values
+- Expected `group_key` values
 
-## Contributing
+## Development
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies using `uv`:
+    ```bash
+    uv sync --all-extras
+    ```
+
+### Configuration
+
+The application requires the following environment variables for API authentication:
+
+- `DBT_CLOUD_ACCOUNT_ID`: Your dbt Cloud account ID
+- `DBT_CLOUD_SERVICE_TOKEN`: Service token with appropriate permissions
+- `DBT_CLOUD_HOST` (optional): Your dbt Cloud host (defaults to cloud.getdbt.com)
+
+### Usage
+
+Run the Streamlit application:
+
+```bash
+streamlit run app.py
+```
+
+### Contributing
 
 Contributions are welcome! Please:
 
