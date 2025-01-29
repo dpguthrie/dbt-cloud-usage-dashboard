@@ -218,6 +218,10 @@ def admin_api_request(path: str):
 
 
 def initialize_app():
+    # Get plan information
+    plan_data = admin_api_request("billing/plans")
+    st.session_state.plan_data = plan_data
+
     # Get all projects
     projects = admin_api_request("projects")
     st.session_state.projects_list = [
@@ -270,6 +274,20 @@ def initialize_app():
             "project_name",
         ]
     ]
+
+
+def get_plan_information():
+    current_credits = st.session_state.plan_data["current_credits"]
+    if current_credits:
+        available = current_credits.get("available_cents", 0) / 100
+        total = current_credits.get("total_cents", 0) / 100
+        remaining = total - available
+    subscription = st.session_state.plan_data["subscription"]
+    if subscription:
+        plan_id = subscription["plan_id"]
+        if plan_id == "enterprise" and total > 0:
+            progress_text = f"${remaining:,.2f} used of ${total:,.0f} commit"
+            st.progress(remaining / total, text=progress_text)
 
 
 def get_billing_data(
@@ -441,6 +459,8 @@ if "user_df" not in st.session_state:
     """)
     st.warning("Please initialize the app to get started.")
     st.stop()
+
+get_plan_information()
 
 col1, col2, col3, col4, col5 = st.columns([0.35, 0.2, 0.15, 0.15, 0.15])
 
