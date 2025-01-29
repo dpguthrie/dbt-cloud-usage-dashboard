@@ -21,7 +21,7 @@ The dashboard allows users to:
   - Account Admin or Account Viewer permissions for usage metrics
   - Metadata Only permissions (minimum) for model-level data via Discovery API
 
-## API Schema Validation
+## Testing
 
 This repository includes automated schema validation to ensure stability of the dbt Cloud API responses. The validation:
 
